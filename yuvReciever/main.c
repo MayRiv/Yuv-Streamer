@@ -7,13 +7,9 @@
 #include <string.h>
 #include "jpeg_utils.h"
 #include "v4l2uvc.h"
-struct stack
-{
-  char buffer[62000 - 22 - 5*sizeof(int)];
-  struct stack* next;
-};
-
-typedef struct stack* Stack;
+#include "stack.h"
+extern pthread_mutex_t mutex;
+Stack* head = NULL;
 int main()
 {
     printf("Lounched\n");
@@ -29,7 +25,7 @@ int main()
         perror("socket");
         exit(1);
     }
-    
+
     addr.sin_family = AF_INET;
     addr.sin_port = htons(1234);
     addr.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -43,12 +39,14 @@ int main()
     int pieceNumber = 0;
     int height = 0;
     int width = 0;
-    unsigned char* jpeg = (unsigned char*)malloc(3*sizeOfUDP-3*21-3*5*sizeof(int));
-    unsigned char* yuv = (unsigned char*)malloc(153600 - 3 * 21 - 3 * 5 * sizeof(int));
+    unsigned char* jpeg = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
+    unsigned char* yuv  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
+    unsigned char* yuvListTest  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
 
     int size = 0;
     int actualSizeOfYuv = 0;
     int shift = 0;
+
     struct vdIn info;
     while(1)
     {
@@ -57,23 +55,28 @@ int main()
         memcpy(macAddr, buf, 17);
         memcpy(camID, buf + 17, 4);
         memcpy(&IDOfUDP,        buf + 21, sizeof(int));
+
 	memcpy(&numberOfPieces, buf + 21 + 1 * sizeof(int), sizeof(int));
 	memcpy(&pieceNumber,    buf + 21 + 2 * sizeof(int), sizeof(int));
 	memcpy(&height,         buf + 21 + 3 * sizeof(int), sizeof(int));
 	memcpy(&width,          buf + 21 + 4 * sizeof(int), sizeof(int));
-        memcpy(yuv+shift,       buf + 21 + 5 * sizeof(int), bytes_read - 21 - 5 * sizeof(int));
-        printf("%d piece, bytes have been read %d, the first byte is %x, the last byte is %x, shift is %x\n",pieceNumber, bytes_read,*(yuv + shift),*(yuv + shift + bytes_read - 21 - 5 * sizeof(int) ),shift);
-        shift+=bytes_read - 21 - 5 * sizeof(int);
+        memcpy(yuv + shift,     buf + 21 + 5 * sizeof(int), bytes_read - 21 - 5 * sizeof(int));
+        addPiece(&head, yuv + shift, bytes_read - 21 -5 * sizeof(int), IDOfUDP, pieceNumber, numberOfPieces, height, width, camID, macAddr);
+        //printf("%d piece, bytes have been read %d, the first byte is %x, the last byte is %x, shift is %x\n",pieceNumber, bytes_read,*(yuv + shift),*(yuv + shift + bytes_read - 21 - 5 * sizeof(int) ),shift);
+        printf("%s %s\n",camID,macAddr);
+        shift += bytes_read - 21 - 5 * sizeof(int);
         bytes_read = 0;
 
         if (pieceNumber == numberOfPieces) 
         {
+          int size = getFrame(&head,yuvListTest);
+          printf("size of getFrame is %d ",size); 
           FILE* file = fopen("yuv.jpeg","wb");
           //FILE* fileYuv = fopen("yuv","wb");
 
           printf("Actual size was %d\n",actualSizeOfYuv);
           shift = 0;
-          info.framebuffer = yuv;
+          info.framebuffer = yuvListTest;//yuv;
           info.height = height;
           info.width = width;
 	  size = compress_yuyv_to_jpeg(&info,jpeg,actualSizeOfYuv,actualSizeOfYuv);
@@ -90,4 +93,5 @@ int main()
     free(jpeg);
     return 0;
 }
+
 
