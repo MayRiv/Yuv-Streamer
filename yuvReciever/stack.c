@@ -32,7 +32,7 @@ int getFrame(Stack** head, unsigned char* frame)
 {
   pthread_mutex_lock(&mutex);
   Stack** headp = NULL;
-  if (head) headp = head;
+  if (*head) headp = head;
   else printf("Stack is empty\n");
   int piece                       = 0;
   int size                        = 0;
@@ -40,7 +40,7 @@ int getFrame(Stack** head, unsigned char* frame)
   int IDOfFrame                   = (*headp)->IDOfFrame;
   int totalSize                   = 0;
   if ((*headp)->pieceNumber != 0)  printf("Not a first piece\n");
-  while(headp)
+  while(*headp)
   {
     printf("%d piece, %d numberOfPieces\n", (*headp)->pieceNumber, (*headp)->numberOfPieces);
     memcpy(frame + shift, (*headp)->buffer, (*headp)->size);
