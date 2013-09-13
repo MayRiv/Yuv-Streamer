@@ -10,7 +10,7 @@ int addPiece(Stack** head, unsigned char* buf, int size, int IDOfFrame, int piec
   pthread_mutex_lock(&mutex);
   Stack** headp = head;
   while(headp && (*headp))    headp = &(*headp)->next;
-
+  
   if (!(*headp))
   {
     (*headp)                            = (Stack*)malloc(sizeof(Stack));
@@ -31,38 +31,42 @@ int addPiece(Stack** head, unsigned char* buf, int size, int IDOfFrame, int piec
 int getFrame(Stack** head, unsigned char* frame)
 {
   pthread_mutex_lock(&mutex);
-  Stack** headp = NULL;
-  if (*head) headp = head;
-  else printf("Stack is empty\n");
-  int piece                       = 0;
-  int size                        = 0;
-  int shift                       = 0;
-  int IDOfFrame                   = (*headp)->IDOfFrame;
-  int totalSize                   = 0;
-  if ((*headp)->pieceNumber != 0)  printf("Not a first piece\n");
-  while(*headp)
+  Stack* headp = *head;
+  int piece             = 0;
+  int size              = 0;
+  int shift             = 0;
+  int IDOfFrame         = (*head)->IDOfFrame;
+  int totalSize         = 0;
+  while( headp != 0)
   {
-    printf("%d piece, %d numberOfPieces\n", (*headp)->pieceNumber, (*headp)->numberOfPieces);
-    memcpy(frame + shift, (*headp)->buffer, (*headp)->size);
-    shift     += (*headp)->size;
-    totalSize += (*headp)->size;
-    if ((*headp)->pieceNumber == (*headp)->numberOfPieces)
+    memcpy(frame + shift, headp->buffer, headp->size);
+    totalSize   += headp->size;
+    shift       += headp->size;
+    Stack* temp = headp;
+    if (headp->pieceNumber == headp->numberOfPieces)  //last piece
     {
+      *head=headp->next;
+      free(temp);
       pthread_mutex_unlock(&mutex);
       return totalSize;
     }
-    if ((*headp)->IDOfFrame == (*headp)->next->IDOfFrame)
-    {
-      Stack* temp = *headp;
-      headp = &(*headp)->next;
-      //free(temp);  deleting this causes seg fault.
-      printf("test\n");
-    }
-    else break;
+    if ((headp->next == 0) || (headp->IDOfFrame != headp->next->IDOfFrame)) return -1;
+
+    headp = headp->next;
+    free(temp);
   }
   memset(frame, 0, totalSize);
-  printf("There is no entire frame! The last piece is %d\n", (*headp)->pieceNumber);
+  printf("There is no entire frame! The last piece is %d\n", headp->pieceNumber);
   pthread_mutex_unlock(&mutex);  
   return -1;
+}
+int mergeSort(Stack** head, int key1, int key2)
+{
+ /*
+        I should realize here sorting function, because when I get pices of frames in a broken order, I should fix their order. There will not
+        be mutex-locking, because this function will be usen only in  getFram() function. So, the mutext will be blocked by outer function.
+        I should find somewhere for an answer for following question: Is there a sorting for lists that can replace only the one wring element.
 
+ */
+  return 0;
 }
