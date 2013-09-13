@@ -8,6 +8,7 @@
 int addPiece(Stack** head, unsigned char* buf, int size, int IDOfFrame, int pieceNumber, int numberOfPieces, int height, int width, char* camID, char* macAddr)
 {
   pthread_mutex_lock(&mutex);
+  /*
   Stack** headp = head;
   while(headp && (*headp))    headp = &(*headp)->next;
   
@@ -26,6 +27,42 @@ int addPiece(Stack** head, unsigned char* buf, int size, int IDOfFrame, int piec
     memcpy((*headp)->camID, camID, 4);
     memcpy((*headp)->macAddr, macAddr, 17);
   }
+  */
+  Stack* headp = *head;
+ /* if (headp == NULL)
+  {
+    printf("Stack is empty\n");
+    return 0;
+  }
+*/
+  Stack* newPiece = NULL;
+  newPiece = (Stack*)malloc(sizeof(Stack));
+  
+  while(headp && pieceNumber < headp->pieceNumber)   headp = headp->next;
+
+  if (!headp->next)
+  {
+    newPiece->next = NULL;
+    headp->next = newPiece;
+  }
+  else if (headp)
+  {
+    newPiece->next = headp->next;
+    headp->next = newPiece;
+  }
+  else newPiece->next = NULL;
+  headp->IDOfFrame                  = IDOfFrame;
+  headp->size                       = size;
+  headp->buffer                     = (unsigned char*)malloc(size);
+  headp->pieceNumber                = pieceNumber;
+  headp->numberOfPieces             = numberOfPieces; 
+  headp->height                     = height;
+  headp->width                      = width;
+  memcpy(headp->buffer, buf, size);
+  memcpy(headp->camID, camID, 4);
+  memcpy(headp->macAddr, macAddr, 17);
+  
+  if ((*head) == NULL) *head = headp;
   pthread_mutex_unlock(&mutex);
 }
 int getFrame(Stack** head, unsigned char* frame)
