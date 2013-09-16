@@ -19,6 +19,6 @@ struct stack
 typedef struct stack Stack;
 pthread_mutex_t mutex;
 int addPiece(Stack** head, unsigned char* buf, int size, int IDOfFrame, int pieceNumber, int numberOfPieces, int height, int width, char* camID, char* macAddr);
-int getFrame(Stack** head, unsigned char* frame);
+int getFrame(Stack** head, unsigned char* frame, int* height, int* width);
 int mergeSort(Stack** head, int key1, int key2);
 #endif
