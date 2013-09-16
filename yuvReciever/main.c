@@ -14,7 +14,6 @@ Stack* head = NULL;
 void* getPieces(void* args);
 int main() {
     pthread_mutex_init(&mutex, NULL);
-    printf("Lounched\n");
     int sizeOfUDP = 62000;
     unsigned char* jpeg = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
     unsigned char* yuv  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
@@ -97,10 +96,8 @@ void* getPieces(void* args)
     memcpy(&height,         buf + 21 + 3 * sizeof(int), sizeof(int));
     memcpy(&width,          buf + 21 + 4 * sizeof(int), sizeof(int));
     memcpy(yuv + shift,     buf + 21 + 5 * sizeof(int), bytes_read - 21 - 5 * sizeof(int));
-    printf("Test\n");
     addPiece(&head, yuv + shift, bytes_read - 21 -5 * sizeof(int), IDOfUDP, pieceNumber, numberOfPieces, height, width, camID, macAddr);
-        //printf("%d piece, bytes have been read %d, the first byte is $
-    printf("%s %s\n",camID,macAddr);
+    //printf("%s %s\n",camID,macAddr);
     shift += bytes_read - 21 - 5 * sizeof(int);
     bytes_read = 0;
     if (pieceNumber == numberOfPieces) shift = 0; 
