@@ -11,6 +11,7 @@
 #include <unistd.h>
 extern pthread_mutex_t mutex;
 Stack* head = NULL;
+int convertYuv(unsigned char* input, unsigned char* output, int size);
 void* getPieces(void* args);
 int main() {
     pthread_mutex_init(&mutex, NULL);
@@ -29,17 +30,22 @@ int main() {
     int height = 0;
     int width  = 0;
     sleep(1);
+    unsigned char* OlegTestYuv = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
     while(1)
     {
-        //usleep(20000);
+        //usleep(80000);
         sleep(1);
         int size = getFrame(&head, yuvListTest, &height, &width);
+        if (size < 0) continue;
         FILE* fileYuv    = fopen("OlegTestYuv","wb");
         FILE* file       = fopen("yuv.jpeg","wb");
-        fwrite(yuvListTest, size, 1, fileYuv);
+        convertYuv(yuvListTest, OlegTestYuv, size);
+//        fwrite(yuvListTest, size, 1, fileYuv);
+        fwrite(OlegTestYuv, size, 1, fileYuv);
         info.framebuffer = yuvListTest;//yuv;
         info.height      = height;
         info.width       = width;
+        printf("%d %d\n",height, width);
         size             = compress_yuyv_to_jpeg(&info,jpeg, size, size);
         fwrite(jpeg, size, 1, file);
         fclose(fileYuv);
@@ -105,3 +111,18 @@ void* getPieces(void* args)
 
 
 } 
+
+
+int convertYuv(unsigned char* input, unsigned char* output, int size)
+{
+  int i ;
+  for ( i = 0; i < size; i += 2 )
+    output[ i / 2 ] =  input[i];       // y
+  int j = size / 2;
+  for ( i = 1; i < size; i += 4 )       // v
+    output[ j + i / 4 ] = input[i];
+  j = size / 2 + size / 8 ;             // u
+  for ( i = 3; i < size; i += 4 )
+    output[ j + i / 4 ] = input[i];
+  return size / 2 + 2 *size / 4;
+}

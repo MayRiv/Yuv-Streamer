@@ -36,6 +36,7 @@ int addPiece(Stack** head, unsigned char* buf, int size, int IDOfFrame, int piec
 }
 int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
 {
+  if (!*head) return -1;
   pthread_mutex_lock(&mutex);
   Stack* headp          = *head;
   int piece             = 0;
@@ -43,6 +44,7 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
   int shift             = 0;
   int IDOfFrame         = (*head)->IDOfFrame;
   int totalSize         = 0;
+  printf("The length is %d\n", length(*head));
   while( headp != 0)
   {
     memcpy(frame + shift, headp->buffer, headp->size);
@@ -51,6 +53,7 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
     Stack* toDelete = headp;
     if (headp->pieceNumber == headp->numberOfPieces) 
     {
+      printf("IDOfFrame is %d\n",headp->IDOfFrame);
       *height = headp->height;
       *width  = headp->width;
       *head   = headp->next;
