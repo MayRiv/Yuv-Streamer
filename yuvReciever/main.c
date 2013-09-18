@@ -11,7 +11,7 @@
 #include <unistd.h>
 extern pthread_mutex_t mutex;
 Stack* head = NULL;
-int convertYuv(unsigned char* input, unsigned char* output, int size);
+int convertYuv(unsigned char* input, unsigned char* output, int size, int height, int width);
 void* getPieces(void* args);
 int main() {
     pthread_mutex_init(&mutex, NULL);
@@ -39,7 +39,7 @@ int main() {
         if (size < 0) continue;
         FILE* fileYuv    = fopen("OlegTestYuv","wb");
         FILE* file       = fopen("yuv.jpeg","wb");
-        convertYuv(yuvListTest, OlegTestYuv, size);
+        convertYuv(yuvListTest, OlegTestYuv, size, height, width);
 //        fwrite(yuvListTest, size, 1, fileYuv);
         fwrite(OlegTestYuv, size, 1, fileYuv);
         info.framebuffer = yuvListTest;//yuv;
@@ -113,12 +113,12 @@ void* getPieces(void* args)
 } 
 
 
-int convertYuv(unsigned char* input, unsigned char* output, int size)
+int convertYuv(unsigned char* input, unsigned char* output, int size, int heigth, int width)
 {
   int i ;
-  for ( i = 0; i < size; i += 2 )
-    output[ i / 2 ] =  input[i];       // y
-  int j = size / 2;
+  for ( i = 0; i < size; i ++ )
+    output[i] =  input[i * 2];       // y
+  int shiftInOutput = size / 2;
   /*for ( i = 1; i < size; i += 4 )       // u
     output[ j + i / 4 ] = input[i];
   j = size / 2 + size / 8 ;             // v
@@ -127,12 +127,9 @@ int convertYuv(unsigned char* input, unsigned char* output, int size)
   return size / 2 + 2 *size / 4;*/
   int row = 0;
   int col = 0;
-  for (col = 0; col < 240; col += 2 )
-    for (row = 1; row < 640; row +=4 )
-     output[ j++ ] = input[col * 320 + row];
-  for (col = 0; col < 240; col += 2 )
-    for (row = 3; row < 640; row +=4 ){
-     output[ j++ ] = input[col * 320 + row];
-    }
-    return j;
+  for (col = 0; col < heigth; col += 2 )
+    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * 320 + row];
+  for (col = 0; col < heigth; col += 2 )
+    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * 320 + row];
+  return  shiftInOutput;
 }
