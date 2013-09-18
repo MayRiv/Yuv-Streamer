@@ -33,7 +33,7 @@ int main() {
     unsigned char* OlegTestYuv = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
     while(1)
     {
-        usleep(80000);
+        usleep(20000);
         //sleep(1);
         int size = getFrame(&head, yuvListTest, &height, &width);
         if (size < 0) continue;

@@ -36,15 +36,22 @@ int addPiece(Stack** head, unsigned char* buf, int size, int IDOfFrame, int piec
 }
 int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
 {
-  if (!*head) return -1;
   pthread_mutex_lock(&mutex);
+  if (!*head) 
+  {
+    pthread_mutex_unlock(&mutex);
+     return -1;
+  }
   Stack* headp          = *head;
   int piece             = 0;
   int size              = 0;
   int shift             = 0;
   int IDOfFrame         = (*head)->IDOfFrame;
   int totalSize         = 0;
+  Stack** arrayToDelete = (Stack**)malloc(sizeof(Stack*) * headp->numberOfPieces);
+  int counter           = 0;
   printf("The length is %d\n", length(*head));
+  //Stack** arrayToDelete = (Stack**)malloc(sizeof(Stack*) * headp->numberOfPieces);
   while( headp != 0)
   {
     memcpy(frame + shift, headp->buffer, headp->size);
@@ -54,17 +61,21 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
     if (headp->pieceNumber == headp->numberOfPieces) 
     {
       printf("IDOfFrame is %d\n",headp->IDOfFrame);
+      int i=0;
+      for (i = 0; i < headp->numberOfPieces; i++) free(arrayToDelete[i]);
+      free(arrayToDelete);
       *height = headp->height;
       *width  = headp->width;
       *head   = headp->next;
-      free(toDelete);
+      //free(toDelete);
       pthread_mutex_unlock(&mutex);
       return totalSize;
     }
-    if ((headp->next == 0) || (headp->IDOfFrame != headp->next->IDOfFrame)){pthread_mutex_unlock(&mutex); return -1;}
-
+    if ((headp->next == 0) || (headp->IDOfFrame != headp->next->IDOfFrame)){ break; }//pthread_mutex_unlock(&mutex); return -1;}
+    arrayToDelete[counter] = headp;
+    counter++;
     headp = headp->next;
-    free(toDelete);
+    //free(toDelete);
   }
   memset(frame, 0, totalSize);
   printf("There is no entire frame! The last piece is %d\n", headp->pieceNumber);
