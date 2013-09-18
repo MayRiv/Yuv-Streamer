@@ -119,10 +119,20 @@ int convertYuv(unsigned char* input, unsigned char* output, int size)
   for ( i = 0; i < size; i += 2 )
     output[ i / 2 ] =  input[i];       // y
   int j = size / 2;
-  for ( i = 1; i < size; i += 4 )       // v
+  /*for ( i = 1; i < size; i += 4 )       // u
     output[ j + i / 4 ] = input[i];
-  j = size / 2 + size / 8 ;             // u
+  j = size / 2 + size / 8 ;             // v
   for ( i = 3; i < size; i += 4 )
     output[ j + i / 4 ] = input[i];
-  return size / 2 + 2 *size / 4;
+  return size / 2 + 2 *size / 4;*/
+  int row = 0;
+  int col = 0;
+  for (col = 0; col < 240; col += 2 )
+    for (row = 1; row < 640; row +=4 )
+     output[ j++ ] = input[col * 320 + row];
+  for (col = 0; col < 240; col += 2 )
+    for (row = 3; row < 640; row +=4 ){
+     output[ j++ ] = input[col * 320 + row];
+    }
+    return j;
 }
