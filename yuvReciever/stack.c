@@ -61,7 +61,7 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
       pthread_mutex_unlock(&mutex);
       return totalSize;
     }
-    if ((headp->next == 0) || (headp->IDOfFrame != headp->next->IDOfFrame)) return -1;
+    if ((headp->next == 0) || (headp->IDOfFrame != headp->next->IDOfFrame)){pthread_mutex_unlock(&mutex); return -1;}
 
     headp = headp->next;
     free(toDelete);
