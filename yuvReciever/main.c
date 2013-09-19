@@ -14,9 +14,8 @@ int convertYuv(unsigned char* input, unsigned char* output, int size, int height
 void* getPieces(void* args);
 int main(int argc, char** argv) {
     pthread_mutex_init(&mutex, NULL);
-    unsigned char* jpeg = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
+    unsigned char* convertedYuv = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
     unsigned char* yuv  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
-    unsigned char* yuvListTest  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
 
     int size = 0;
     int actualSizeOfYuv = 0;
@@ -29,21 +28,20 @@ int main(int argc, char** argv) {
     char* fileName = NULL;
     if (argc < 2) fileName = "OlegTestYuv";
     else fileName = argv[1];
-    unsigned char* OlegTestYuv = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
     while(1)
     {
         usleep(20000);
         //sleep(1);
-        int size = getFrame(&head, yuvListTest, &height, &width);
+        int size      = getFrame(&head, yuv, &height, &width);
         if (size < 0) continue;
-        FILE* fileYuv    = fopen(fileName,"wb");
-        convertYuv(yuvListTest, OlegTestYuv, size, height, width);
-        fwrite(OlegTestYuv, size, 1, fileYuv);
+        FILE* fileYuv = fopen(fileName,"wb");
+        convertYuv(yuv, convertedYuv, size, height, width);
+        fwrite(convertedYuv, size, 1, fileYuv);
         printf("%d %d\n",height, width);
         fclose(fileYuv);
     }
     free(yuv);
-    free(jpeg);
+    free(convertedYuv);
     return 0;
 }
 
