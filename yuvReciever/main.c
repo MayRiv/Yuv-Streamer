@@ -5,17 +5,15 @@
 #include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
-#include "jpeg_utils.h"
-#include "v4l2uvc.h"
 #include "stack.h"
 #include <unistd.h>
 extern pthread_mutex_t mutex;
 Stack* head = NULL;
+const int sizeOfUDP = 62000;
 int convertYuv(unsigned char* input, unsigned char* output, int size, int height, int width);
 void* getPieces(void* args);
-int main() {
+int main(int argc, char** argv) {
     pthread_mutex_init(&mutex, NULL);
-    int sizeOfUDP = 62000;
     unsigned char* jpeg = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
     unsigned char* yuv  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
     unsigned char* yuvListTest  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
@@ -23,13 +21,14 @@ int main() {
     int size = 0;
     int actualSizeOfYuv = 0;
     int shift = 0;
-
-    struct vdIn info;
     pthread_t thread;
     pthread_create(&thread, NULL, getPieces, NULL);
     int height = 0;
     int width  = 0;
     sleep(1);
+    char* fileName = NULL;
+    if (argc < 2) fileName = "OlegTestYuv";
+    else fileName = argv[1];
     unsigned char* OlegTestYuv = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
     while(1)
     {
@@ -37,22 +36,12 @@ int main() {
         //sleep(1);
         int size = getFrame(&head, yuvListTest, &height, &width);
         if (size < 0) continue;
-        FILE* fileYuv    = fopen("OlegTestYuv","wb");
-        FILE* file       = fopen("yuv.jpeg","wb");
+        FILE* fileYuv    = fopen(fileName,"wb");
         convertYuv(yuvListTest, OlegTestYuv, size, height, width);
-//        fwrite(yuvListTest, size, 1, fileYuv);
         fwrite(OlegTestYuv, size, 1, fileYuv);
-        info.framebuffer = yuvListTest;//yuv;
-        info.height      = height;
-        info.width       = width;
         printf("%d %d\n",height, width);
-        size             = compress_yuyv_to_jpeg(&info,jpeg, size, size);
-        fwrite(jpeg, size, 1, file);
         fclose(fileYuv);
-        fclose(file);
     }
-
-
     free(yuv);
     free(jpeg);
     return 0;
@@ -63,7 +52,6 @@ void* getPieces(void* args)
 {
   int sock;
   struct sockaddr_in addr;
-  const int sizeOfUDP = 62000;
   char buf[3 * sizeOfUDP + 3 * 21 + 3 * 5 * sizeof(int)];
   int bytes_read = 0;
   sock = socket(AF_INET, SOCK_DGRAM, 0);
@@ -116,20 +104,15 @@ void* getPieces(void* args)
 int convertYuv(unsigned char* input, unsigned char* output, int size, int heigth, int width)
 {
   int i ;
-  for ( i = 0; i < size; i ++ )
-    output[i] =  input[i * 2];       // y
+  for (i = 0; i < size; i ++)
+    output[i] =  input[i * 2];                                                                  // y
   int shiftInOutput = size / 2;
-  /*for ( i = 1; i < size; i += 4 )       // u
-    output[ j + i / 4 ] = input[i];
-  j = size / 2 + size / 8 ;             // v
-  for ( i = 3; i < size; i += 4 )
-    output[ j + i / 4 ] = input[i];
-  return size / 2 + 2 *size / 4;*/
+  
   int row = 0;
   int col = 0;
-  for (col = 0; col < heigth; col += 2 )
-    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * 320 + row];
-  for (col = 0; col < heigth; col += 2 )
-    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * 320 + row];
+  for (col = 0; col < heigth; col += 2)
+    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * 320 + row];  //u
+  for (col = 0; col < heigth; col += 2)
+    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * 320 + row];  //v
   return  shiftInOutput;
 }

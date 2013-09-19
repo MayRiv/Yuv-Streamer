@@ -62,7 +62,11 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
     {
       printf("IDOfFrame is %d\n",headp->IDOfFrame);
       int i=0;
-      for (i = 0; i < headp->numberOfPieces; i++) free(arrayToDelete[i]);
+      for (i = 0; i < headp->numberOfPieces; i++)
+      {
+        free(arrayToDelete[i]->buffer);
+        free(arrayToDelete[i]);
+      }
       free(arrayToDelete);
       *height = headp->height;
       *width  = headp->width;
