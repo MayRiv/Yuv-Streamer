@@ -24,7 +24,6 @@ int main(int argc, char** argv) {
     pthread_create(&thread, NULL, getPieces, NULL);
     int height = 0;
     int width  = 0;
-    sleep(1);
     char* fileName = NULL;
     if (argc < 2) fileName = "OlegTestYuv";
     else fileName = argv[1];
@@ -96,9 +95,7 @@ void* getPieces(void* args)
     if (pieceNumber == numberOfPieces) shift = 0; 
   }
     free(yuv);
-
-
-} 
+}
 
 
 int convertYuv(unsigned char* input, unsigned char* output, int size, int heigth, int width)

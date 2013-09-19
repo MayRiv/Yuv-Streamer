@@ -49,10 +49,12 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
   int IDOfFrame         = (*head)->IDOfFrame;
   int totalSize         = 0;
   Stack** arrayToDelete = (Stack**)malloc(sizeof(Stack*) * (headp->numberOfPieces + 1));
+  memset(arrayToDelete, 0, headp->numberOfPieces+1);
   int counter           = 0;
   printf("The length is %d\n", length(*head));
   while( headp != 0)
   {
+    printf("Piece is collected\n");
     memcpy(frame + shift, headp->buffer, headp->size);
     totalSize      += headp->size;
     shift          += headp->size;
@@ -62,7 +64,8 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
       int i=0;
       for (i = 0; i < headp->numberOfPieces; i++)    //free all the pieces without last one.
       {
-        free(arrayToDelete[i]->buffer);
+	printf("freeing %d piece\n",i);
+        if (arrayToDelete[i]) free(arrayToDelete[i]->buffer);
         free(arrayToDelete[i]);
       }
       free(arrayToDelete);
