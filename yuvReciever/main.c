@@ -35,8 +35,8 @@ int main(int argc, char** argv) {
         int size      = getFrame(&head, yuv, &height, &width);
         if (size < 0) continue;
         FILE* fileYuv = fopen(fileName,"wb");
-        convertYuv(yuv, convertedYuv, size, height, width);
-        fwrite(convertedYuv, size, 1, fileYuv);
+        int sizeOfConvertedYuv = convertYuv(yuv, convertedYuv, size, height, width);
+        fwrite(convertedYuv,  sizeOfConvertedYuv, 1, fileYuv);
         printf("%d %d\n",height, width);
         fclose(fileYuv);
     }
@@ -111,8 +111,8 @@ int convertYuv(unsigned char* input, unsigned char* output, int size, int heigth
   int row = 0;
   int col = 0;
   for (col = 0; col < heigth; col += 2)
-    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * 320 + row];  //u
+    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * heigth + row];  //u
   for (col = 0; col < heigth; col += 2)
-    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * 320 + row];  //v
+    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * heigth + row];  //v
   return  shiftInOutput;
 }

@@ -56,7 +56,6 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
     memcpy(frame + shift, headp->buffer, headp->size);
     totalSize      += headp->size;
     shift          += headp->size;
-    Stack* toDelete = headp;
     if (headp->pieceNumber == headp->numberOfPieces) 
     {
       printf("IDOfFrame is %d\n",headp->IDOfFrame);
@@ -70,7 +69,6 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
       *height = headp->height;
       *width  = headp->width;
       *head   = headp->next;
-      //free(toDelete);
       free(headp->buffer);                            // clean memory for last one.
       free(headp);
       pthread_mutex_unlock(&mutex);
@@ -82,6 +80,7 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
     headp = headp->next;
     //free(toDelete);
   }
+  free(arrayToDelete);
   memset(frame, 0, totalSize);
   printf("There is no entire frame! The last piece is %d\n", headp->pieceNumber);
   pthread_mutex_unlock(&mutex);  
