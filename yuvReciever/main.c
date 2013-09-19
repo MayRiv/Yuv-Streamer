@@ -64,7 +64,6 @@ void* getPieces(void* args)
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
  
   if(bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)  printf("Error in binding\n");
-  unsigned char* yuv  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
   int actualSizeOfYuv = 0;
   char camID[5];
   camID[4]='\0';
@@ -76,9 +75,11 @@ void* getPieces(void* args)
   int height = 0;
   int width = 0;
   int shift = 0;
+  unsigned char* yuv  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
+
   while(1)
   {
-    bytes_read = recvfrom(sock, buf,sizeOfUDP + 21 + 5 * sizeof(int), 0, NULL, NULL);
+    bytes_read = recvfrom(sock, buf, sizeOfUDP + 21 + 5 * sizeof(int), 0, NULL, NULL);
     actualSizeOfYuv += bytes_read;
     memcpy(macAddr, buf, 17);
     memcpy(camID, buf + 17, 4);
@@ -90,10 +91,11 @@ void* getPieces(void* args)
     memcpy(yuv + shift,     buf + 21 + 5 * sizeof(int), bytes_read - 21 - 5 * sizeof(int));
     addPiece(&head, yuv + shift, bytes_read - 21 -5 * sizeof(int), IDOfUDP, pieceNumber, numberOfPieces, height, width, camID, macAddr);
     //printf("%s %s\n",camID,macAddr);
-    shift += bytes_read - 21 - 5 * sizeof(int);
+    //shift += bytes_read - 21 - 5 * sizeof(int);
     bytes_read = 0;
     if (pieceNumber == numberOfPieces) shift = 0; 
   }
+    free(yuv);
 
 
 } 
@@ -101,8 +103,8 @@ void* getPieces(void* args)
 
 int convertYuv(unsigned char* input, unsigned char* output, int size, int heigth, int width)
 {
-  int i ;
-  for (i = 0; i < size; i ++)
+  int i = 0 ;
+  for (i = 0; i < size / 2; i++)
     output[i] =  input[i * 2];                                                                  // y
   int shiftInOutput = size / 2;
   
