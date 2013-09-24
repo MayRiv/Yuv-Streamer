@@ -27,18 +27,20 @@ int main(int argc, char** argv) {
     char* fileName = NULL;
     if (argc < 2) fileName = "OlegTestYuv";
     else fileName = argv[1];
+    FILE* fileYuv = fopen(fileName,"wb");
+
     while(1)
     {
         usleep(20000);
         //sleep(1);
         int size      = getFrame(&head, yuv, &height, &width);
         if (size < 0) continue;
-        FILE* fileYuv = fopen(fileName,"wb");
         int sizeOfConvertedYuv = convertYuv(yuv, convertedYuv, size, height, width);
         fwrite(convertedYuv,  sizeOfConvertedYuv, 1, fileYuv);
+	fflush(fileYuv);
         printf("%d %d\n",height, width);
-        fclose(fileYuv);
     }
+    fclose(fileYuv);
     free(yuv);
     free(convertedYuv);
     return 0;
@@ -108,8 +110,8 @@ int convertYuv(unsigned char* input, unsigned char* output, int size, int heigth
   int row = 0;
   int col = 0;
   for (col = 0; col < heigth; col += 2)
-    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * heigth + row];  //u
+    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width + row];  //u
   for (col = 0; col < heigth; col += 2)
-    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * heigth + row];  //v
+    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width + row];  //v
   return  shiftInOutput;
 }

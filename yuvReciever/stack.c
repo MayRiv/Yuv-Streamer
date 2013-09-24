@@ -65,7 +65,7 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
     shift          += headp->size;
     arrayToDelete[counter] = headp;
     counter++;
-    if (headp->pieceNumber == headp->numberOfPieces) 
+    if (counter == (headp->numberOfPieces + 1) && headp->pieceNumber == headp->numberOfPieces)   //there were last and first pieces of the frame.
     {
       printf("IDOfFrame is %d\n",headp->IDOfFrame);
       int i=0;
@@ -88,13 +88,16 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
     //free(toDelete);
   }
   int i;
- // *head = headp->next;
-  /*for (i = 0; i < headp->numberOfPieces + 1; i++)    
+  if (length(*head) > 3)
   {
-    printf("freeing %d piece\n",i);
-    if (arrayToDelete[i]) free(arrayToDelete[i]->buffer);
-    free(arrayToDelete[i]);
-  }*/
+    *head = headp->next;
+    for (i = 0; i < headp->numberOfPieces + 1; i++)    
+    {
+      printf("freeing %d piece\n",i);
+      if (arrayToDelete[i]) free(arrayToDelete[i]->buffer);
+      free(arrayToDelete[i]);
+    }
+  }
   free(arrayToDelete);
   //memset(frame, 0, totalSize);
   //printf("There is no entire frame! The last piece is %d\n", headp->pieceNumber);
