@@ -110,8 +110,8 @@ int convertYuv(unsigned char* input, unsigned char* output, int size, int heigth
   int row = 0;
   int col = 0;
   for (col = 0; col < heigth; col += 2)
-    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width + row];  //u
+    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width * 2 + row];  //u
   for (col = 0; col < heigth; col += 2)
-    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width + row];  //v
+    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width * 2 + row];  //v
   return  shiftInOutput;
 }
