@@ -5,12 +5,14 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-int length(Stack *head);
+int length(Stack* head);
+void showStack(Stack* head);
 int addPiece(Stack** head, unsigned char* buf, int size, int IDOfFrame, int pieceNumber, int numberOfPieces, int height, int width, char* camID, char* macAddr)
 {
   pthread_mutex_lock(&mutex);
-  if (length(*head) > 10)
+  if ((length(*head) != 0) && (length(*head) > 4 * (*head)->numberOfPieces))
   {
+    printf("There too many elements in the stack. Aborted\n");
     pthread_mutex_unlock(&mutex);
     return -1;
   }
@@ -42,11 +44,12 @@ int addPiece(Stack** head, unsigned char* buf, int size, int IDOfFrame, int piec
 int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
 {
   pthread_mutex_lock(&mutex);
-  if (!*head) 
+  if (!*head || length(*head) < 3) 
   {
     pthread_mutex_unlock(&mutex);
     return -1;
   }
+  //showStack(*head);
   Stack* headp          = *head;
   int piece             = 0;
   int size              = 0;
@@ -56,10 +59,8 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
   Stack** arrayToDelete = (Stack**)malloc(sizeof(Stack*) * (headp->numberOfPieces + 1));
   memset(arrayToDelete, 0, (headp->numberOfPieces+1) * sizeof(Stack*));
   int counter           = 0;
-  printf("The length is %d\n", length(*head));
   while( headp != 0)
   {
-    printf("Piece is collected\n");
     memcpy(frame + shift, headp->buffer, headp->size);
     totalSize      += headp->size;
     shift          += headp->size;
@@ -67,7 +68,6 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
     counter++;
     if (counter == (headp->numberOfPieces + 1) && headp->pieceNumber == headp->numberOfPieces)   //there were last and first pieces of the frame.
     {
-      printf("IDOfFrame is %d\n",headp->IDOfFrame);
       int i=0;
       *head   = headp->next;
       *height = headp->height;
@@ -75,7 +75,6 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
 
       for (i = 0; i < headp->numberOfPieces + 1; i++)    
       {
-	printf("freeing %d piece\n",i);
         if (arrayToDelete[i]) free(arrayToDelete[i]->buffer);
         free(arrayToDelete[i]);
       }
@@ -85,22 +84,18 @@ int getFrame(Stack** head, unsigned char* frame, int* height, int* width)
     }
     if ((headp->next == 0) || (headp->IDOfFrame != headp->next->IDOfFrame)){ break; }//pthread_mutex_unlock(&mutex); return -1;}
     headp = headp->next;
-    //free(toDelete);
   }
   int i;
-  if (length(*head) > 3)
+  if (length(*head) > (*head)->numberOfPieces)
   {
     *head = headp->next;
     for (i = 0; i < headp->numberOfPieces + 1; i++)    
     {
-      printf("freeing %d piece\n",i);
       if (arrayToDelete[i]) free(arrayToDelete[i]->buffer);
       free(arrayToDelete[i]);
     }
   }
   free(arrayToDelete);
-  //memset(frame, 0, totalSize);
-  //printf("There is no entire frame! The last piece is %d\n", headp->pieceNumber);
   pthread_mutex_unlock(&mutex);  
   return -1;
 }
@@ -114,4 +109,13 @@ int length(Stack* head)
   }
   return len;
 
+}
+void showStack(Stack* head)
+{
+  while(head)
+  {
+    printf("IDOfFrame is %d, pieceNumber is %d\n", head->IDOfFrame, head->pieceNumber);
+    head = head->next;
+  }
+  printf("\n\n\n");
 }

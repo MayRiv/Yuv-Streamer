@@ -7,6 +7,7 @@
 #include <string.h>
 #include "stack.h"
 #include <unistd.h>
+#include <time.h>
 extern pthread_mutex_t mutex;
 Stack* head = NULL;
 const int sizeOfUDP = 62000;
@@ -14,8 +15,8 @@ int convertYuv(unsigned char* input, unsigned char* output, int size, int height
 void* getPieces(void* args);
 int main(int argc, char** argv) {
     pthread_mutex_init(&mutex, NULL);
-    unsigned char* convertedYuv = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
-    unsigned char* yuv  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
+    unsigned char* convertedYuv = (unsigned char*)malloc(20 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
+    unsigned char* yuv          = (unsigned char*)malloc(20 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
 
     int size = 0;
     int actualSizeOfYuv = 0;
@@ -28,17 +29,19 @@ int main(int argc, char** argv) {
     if (argc < 2) fileName = "OlegTestYuv";
     else fileName = argv[1];
     FILE* fileYuv = fopen(fileName,"wb");
+    struct timespec ts;
+
 
     while(1)
     {
-        usleep(20000);
+        usleep(10000);
         //sleep(1);
         int size      = getFrame(&head, yuv, &height, &width);
         if (size < 0) continue;
         int sizeOfConvertedYuv = convertYuv(yuv, convertedYuv, size, height, width);
         fwrite(convertedYuv,  sizeOfConvertedYuv, 1, fileYuv);
-	fflush(fileYuv);
-        printf("%d %d\n",height, width);
+	time_t t = time(NULL);
+        printf("Frame was sent in %s\n",ctime(&t));
     }
     fclose(fileYuv);
     free(yuv);
@@ -51,7 +54,7 @@ void* getPieces(void* args)
 {
   int sock;
   struct sockaddr_in addr;
-  char buf[3 * sizeOfUDP + 3 * 21 + 3 * 5 * sizeof(int)];
+  char buf[20 * sizeOfUDP + 3 * 21 + 3 * 5 * sizeof(int)];
   int bytes_read = 0;
   sock = socket(AF_INET, SOCK_DGRAM, 0);
   if(sock < 0)
@@ -81,6 +84,7 @@ void* getPieces(void* args)
   while(1)
   {
     bytes_read = recvfrom(sock, buf, sizeOfUDP + 21 + 5 * sizeof(int), 0, NULL, NULL);
+    time_t t = time(NULL);
     actualSizeOfYuv += bytes_read;
     memcpy(macAddr, buf, 17);
     memcpy(camID, buf + 17, 4);
@@ -90,6 +94,8 @@ void* getPieces(void* args)
     memcpy(&height,         buf + 21 + 3 * sizeof(int), sizeof(int));
     memcpy(&width,          buf + 21 + 4 * sizeof(int), sizeof(int));
     memcpy(yuv + shift,     buf + 21 + 5 * sizeof(int), bytes_read - 21 - 5 * sizeof(int));
+ //   printf("%d Frame %d piece was recieved in %s\n", IDOfUDP, pieceNumber, ctime(&t));
+
     addPiece(&head, yuv + shift, bytes_read - 21 -5 * sizeof(int), IDOfUDP, pieceNumber, numberOfPieces, height, width, camID, macAddr);
     //printf("%s %s\n",camID,macAddr);
     //shift += bytes_read - 21 - 5 * sizeof(int);
