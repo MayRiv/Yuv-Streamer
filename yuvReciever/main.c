@@ -16,7 +16,7 @@ void* getPieces(void* args);
 int main(int argc, char** argv) {
     pthread_mutex_init(&mutex, NULL);
     unsigned char* convertedYuv = (unsigned char*)malloc(20 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
-    unsigned char* yuv          = (unsigned char*)malloc(20 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
+    unsigned char* yuv = (unsigned char*)malloc(20 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
 
     int size = 0;
     int actualSizeOfYuv = 0;
@@ -24,7 +24,7 @@ int main(int argc, char** argv) {
     pthread_t thread;
     pthread_create(&thread, NULL, getPieces, NULL);
     int height = 0;
-    int width  = 0;
+    int width = 0;
     char* fileName = NULL;
     if (argc < 2) fileName = "OlegTestYuv";
     else fileName = argv[1];
@@ -36,11 +36,11 @@ int main(int argc, char** argv) {
     {
         usleep(10000);
         //sleep(1);
-        int size      = getFrame(&head, yuv, &height, &width);
+        int size = getFrame(&head, yuv, &height, &width);
         if (size < 0) continue;
         int sizeOfConvertedYuv = convertYuv(yuv, convertedYuv, size, height, width);
-        fwrite(convertedYuv,  sizeOfConvertedYuv, 1, fileYuv);
-	time_t t = time(NULL);
+        fwrite(convertedYuv, sizeOfConvertedYuv, 1, fileYuv);
+time_t t = time(NULL);
         printf("Frame was sent in %s\n",ctime(&t));
     }
     fclose(fileYuv);
@@ -67,7 +67,7 @@ void* getPieces(void* args)
   addr.sin_port = htons(1234);
   addr.sin_addr.s_addr = htonl(INADDR_ANY);
  
-  if(bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0)  printf("Error in binding\n");
+  if(bind(sock, (struct sockaddr *)&addr, sizeof(addr)) < 0) printf("Error in binding\n");
   int actualSizeOfYuv = 0;
   char camID[5];
   camID[4]='\0';
@@ -79,28 +79,30 @@ void* getPieces(void* args)
   int height = 0;
   int width = 0;
   int shift = 0;
-  unsigned char* yuv  = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
-
+  unsigned char* yuv = (unsigned char*)malloc(3 * sizeOfUDP - 3 * 21 - 3 * 5 * sizeof(int));
+  int t = 0;
   while(1)
   {
-    bytes_read = recvfrom(sock, buf, sizeOfUDP + 21 + 5 * sizeof(int), 0, NULL, NULL);
+    bytes_read = recvfrom(sock, buf, sizeOfUDP + 21 + 6 * sizeof(int), 0, NULL, NULL);
     time_t t = time(NULL);
     actualSizeOfYuv += bytes_read;
     memcpy(macAddr, buf, 17);
     memcpy(camID, buf + 17, 4);
-    memcpy(&IDOfUDP,        buf + 21, sizeof(int));
+    memcpy(&IDOfUDP, buf + 21, sizeof(int));
     memcpy(&numberOfPieces, buf + 21 + 1 * sizeof(int), sizeof(int));
-    memcpy(&pieceNumber,    buf + 21 + 2 * sizeof(int), sizeof(int));
-    memcpy(&height,         buf + 21 + 3 * sizeof(int), sizeof(int));
-    memcpy(&width,          buf + 21 + 4 * sizeof(int), sizeof(int));
-    memcpy(yuv + shift,     buf + 21 + 5 * sizeof(int), bytes_read - 21 - 5 * sizeof(int));
- //   printf("%d Frame %d piece was recieved in %s\n", IDOfUDP, pieceNumber, ctime(&t));
+    memcpy(&pieceNumber, buf + 21 + 2 * sizeof(int), sizeof(int));
+    memcpy(&height, buf + 21 + 3 * sizeof(int), sizeof(int));
+    memcpy(&width, buf + 21 + 4 * sizeof(int), sizeof(int));
+    memcpy(&t, buf + 21 + 5 * sizeof(int), sizeof(int));
+	
+    memcpy(yuv + shift, buf + 21 + 6 * sizeof(int), bytes_read - 21 - 6 * sizeof(int));
+ // printf("%d Frame %d piece was recieved in %s\n", IDOfUDP, pieceNumber, ctime(&t));
 
-    addPiece(&head, yuv + shift, bytes_read - 21 -5 * sizeof(int), IDOfUDP, pieceNumber, numberOfPieces, height, width, camID, macAddr);
+    addPiece(&head, yuv + shift, bytes_read - 21 - 6 * sizeof(int), IDOfUDP, pieceNumber, numberOfPieces, height, width, camID, macAddr);
     //printf("%s %s\n",camID,macAddr);
     //shift += bytes_read - 21 - 5 * sizeof(int);
     bytes_read = 0;
-    if (pieceNumber == numberOfPieces) shift = 0; 
+    if (pieceNumber == numberOfPieces) shift = 0;
   }
     free(yuv);
 }
@@ -110,14 +112,14 @@ int convertYuv(unsigned char* input, unsigned char* output, int size, int heigth
 {
   int i = 0 ;
   for (i = 0; i < size / 2; i++)
-    output[i] =  input[i * 2];                                                                  // y
+    output[i] = input[i * 2]; // y
   int shiftInOutput = size / 2;
   
   int row = 0;
   int col = 0;
   for (col = 0; col < heigth; col += 2)
-    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width * 2 + row];  //u
+    for (row = 1; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width * 2 + row]; //u
   for (col = 0; col < heigth; col += 2)
-    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width * 2 + row];  //v
-  return  shiftInOutput;
+    for (row = 3; row < 2 * width; row +=4 ) output[shiftInOutput++] = input[col * width * 2 + row]; //v
+  return shiftInOutput;
 }
